@@ -12,4 +12,4 @@ if not exist "signature-assets\sisco-logo.png" (
 )
 
 echo Opening SISCO Email Signature Generator...
-start "" "%~dp0signature.html"
+start "" "%~dp0index.html"
