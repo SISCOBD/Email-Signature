@@ -221,14 +221,14 @@
       <label for="f-tel">Telephone</label>
       <div class="phone-field">
         <span class="phone-prefix">+966</span>
-        <input type="tel" id="f-tel" placeholder="13 123 4567" inputmode="tel" />
+        <input type="text" id="f-tel" placeholder="131234567" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
       </div>
     </div>
     <div class="field">
       <label for="f-mobile">Mobile</label>
       <div class="phone-field">
         <span class="phone-prefix">+966</span>
-        <input type="tel" id="f-mobile" placeholder="50 123 4567" inputmode="tel" />
+        <input type="text" id="f-mobile" placeholder="501234567" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
       </div>
     </div>
 
@@ -299,13 +299,30 @@
       .replace(/"/g, '&quot;');
   }
 
+  function digitsOnly(raw) {
+    return String(raw).replace(/\D/g, '');
+  }
+
   function stripCountryCode(raw) {
-    return String(raw).replace(/^\s*\+966\s*/i, '').trim();
+    return digitsOnly(String(raw).replace(/^\s*\+966\s*/i, ''));
   }
 
   function formatPhone(raw) {
     const local = stripCountryCode(raw);
     return local ? (PHONE_CC + ' ' + local) : PHONE_CC;
+  }
+
+  function bindDigitsOnly(el) {
+    el.addEventListener('input', function () {
+      const cleaned = digitsOnly(this.value);
+      if (this.value !== cleaned) this.value = cleaned;
+    });
+    el.addEventListener('paste', function (e) {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      this.value = digitsOnly(this.value + pasted);
+      update();
+    });
   }
 
   function getValues() {
@@ -515,6 +532,8 @@
     loadLogoSource();
   }
 
+  bindDigitsOnly(fields.tel);
+  bindDigitsOnly(fields.mobile);
   Object.values(fields).forEach(function (el) {
     el.addEventListener('input', update);
   });
