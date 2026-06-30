@@ -264,13 +264,13 @@
   const BLUE   = '#006898';
   const ORANGE = '#e38d2d';
   const FONT   = 'Calibri,Arial,Helvetica,sans-serif';
-  const NAME_SIZE   = '13pt';
-  const TITLE_SIZE  = '13pt';
-  const BODY_SIZE   = '11pt';
-  const LOGO_W = 135;
-  const LOGO_H = 63;
-  const CERT_W = 130;
-  const CERT_H = 31;
+  const NAME_SIZE   = '11pt';
+  const TITLE_SIZE  = '11pt';
+  const BODY_SIZE   = '9pt';
+  const LOGO_W = 109;
+  const LOGO_H = 67;
+  const CERT_W = 85;
+  const CERT_H = 20;
   const LOGO_SOURCES = [
     window.SIG_ASSETS && window.SIG_ASSETS.logo,
     'signature-assets/sisco-logo.png',
@@ -374,10 +374,10 @@
 
     return [
       '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;' + textBase + '">',
-      '  <tr><td style="' + textBase + 'font-size:' + NAME_SIZE + ';font-weight:bold;line-height:20pt;mso-line-height-rule:exactly;padding:0 0 2px 0;">' + esc(v.name) + '</td></tr>',
+      '  <tr><td style="' + textBase + 'font-size:' + NAME_SIZE + ';line-height:20pt;mso-line-height-rule:exactly;padding:0 0 2px 0;">' + esc(v.name) + '</td></tr>',
       '  <tr><td style="' + textBase + 'font-size:' + TITLE_SIZE + ';line-height:20pt;mso-line-height-rule:exactly;padding:0 0 8px 0;">' + esc(v.position) + '</td></tr>',
       '  <tr><td style="padding:0 0 10px 0;">',
-      '    <table cellpadding="0" cellspacing="0" border="0" width="560" style="border-collapse:collapse;">',
+      '    <table cellpadding="0" cellspacing="0" border="0" width="450" style="border-collapse:collapse;">',
       '      <tr><td style="border-bottom:1px solid ' + BLUE + ';font-size:0;line-height:0;">&nbsp;</td></tr>',
       '    </table>',
       '  </td></tr>',
