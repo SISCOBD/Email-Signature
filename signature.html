@@ -69,7 +69,7 @@
       text-transform: uppercase;
       letter-spacing: .6px;
     }
-    input[type="text"], input[type="tel"] {
+    input[type="text"], input[type="tel"], select {
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid var(--border);
@@ -79,7 +79,15 @@
       outline: none;
       background: #fafbfd;
     }
-    input:focus {
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+    input:focus, select:focus {
       border-color: var(--brand);
       box-shadow: 0 0 0 3px rgba(31,78,121,.10);
     }
@@ -197,18 +205,242 @@
         height: 32px;
       }
     }
+    body.app-locked {
+      overflow: hidden;
+    }
+    body.app-locked .app-shell {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+    .brand-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background:
+        radial-gradient(ellipse at 20% 15%, rgba(0,104,152,.22), transparent 45%),
+        radial-gradient(ellipse at 85% 80%, rgba(227,141,45,.18), transparent 40%),
+        rgba(15, 28, 46, .55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 1;
+      transition: opacity .28s ease;
+    }
+    .brand-modal.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .brand-modal-card {
+      width: min(720px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      padding: 36px 32px 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.28);
+      transform: translateY(0) scale(1);
+      transition: transform .28s ease;
+      animation: modalIn .35s ease both;
+    }
+    .brand-modal.is-hidden .brand-modal-card {
+      transform: translateY(12px) scale(.97);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(18px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .brand-modal-eyebrow {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--brand);
+      background: #eef5fa;
+      border-radius: 999px;
+      padding: 5px 12px;
+      margin-bottom: 14px;
+    }
+    .brand-modal-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #163a5c;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .brand-modal-sub {
+      font-size: .92rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 26px;
+    }
+    .brand-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 700px) {
+      .brand-options { grid-template-columns: 1fr; }
+      .brand-modal-card { padding: 28px 20px 22px; }
+    }
+    .brand-option {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 16px 18px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: #fafbfd;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .18s ease;
+      font: inherit;
+      color: inherit;
+      width: 100%;
+    }
+    .brand-option:hover {
+      border-color: #b7c8d8;
+      background: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    }
+    .brand-option.is-selected {
+      border-color: var(--brand);
+      background: #f3f8fc;
+      box-shadow: 0 0 0 3px rgba(0,104,152,.12);
+    }
+    .brand-option-logo {
+      height: 52px;
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .brand-option-name {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #163a5c;
+    }
+    .brand-option-desc {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: -6px;
+    }
+    .brand-option-check {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .brand-option.is-selected .brand-option-check { display: flex; }
+    .brand-modal-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .brand-modal-actions .btn-primary {
+      flex: 1;
+      padding: 13px 18px;
+      border-radius: 10px;
+      font-size: .95rem;
+    }
+    .brand-modal-actions .btn-primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .btn-change-company {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: -8px auto 28px;
+      padding: 7px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.04);
+    }
+    .btn-change-company:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+    .app-header {
+      text-align: center;
+    }
   </style>
 </head>
-<body>
+<body class="app-locked">
 
+<div class="brand-modal" id="brand-modal" role="dialog" aria-modal="true" aria-labelledby="brand-modal-title">
+  <div class="brand-modal-card">
+    <span class="brand-modal-eyebrow">Email Signature</span>
+    <h2 class="brand-modal-title" id="brand-modal-title">Choose your company</h2>
+    <p class="brand-modal-sub">Select a subsidiary to load the matching signature template.</p>
+    <div class="brand-options" role="radiogroup" aria-label="Company">
+      <button type="button" class="brand-option" data-brand="sisco" role="radio" aria-checked="false">
+        <span class="brand-option-check" aria-hidden="true">✓</span>
+        <img class="brand-option-logo" id="modal-logo-sisco" src="" alt="SISCO" />
+        <span class="brand-option-name">SISCO</span>
+        <span class="brand-option-desc">Corporate signature</span>
+      </button>
+      <button type="button" class="brand-option" data-brand="catering" role="radio" aria-checked="false">
+        <span class="brand-option-check" aria-hidden="true">✓</span>
+        <img class="brand-option-logo" id="modal-logo-catering" src="" alt="SISCO Catering" />
+        <span class="brand-option-name">SISCO Catering</span>
+        <span class="brand-option-desc">Catering signature</span>
+      </button>
+      <button type="button" class="brand-option" data-brand="machinery" role="radio" aria-checked="false">
+        <span class="brand-option-check" aria-hidden="true">✓</span>
+        <img class="brand-option-logo" id="modal-logo-machinery" src="" alt="SISCO Machinery" />
+        <span class="brand-option-name">SISCO Machinery</span>
+        <span class="brand-option-desc">Machinery signature</span>
+      </button>
+    </div>
+    <div class="brand-modal-actions">
+      <button type="button" class="btn-primary" id="btn-brand-continue" disabled>Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-shell">
 <img class="top-logo" id="header-logo" src="" alt="SISCO" />
-<h1>SISCO Email Signature Generator</h1>
-<p class="subtitle">Matches the Email Signature template — copy and paste directly into Outlook.</p>
+<div class="app-header">
+  <h1 id="page-title">SISCO Email Signature Generator</h1>
+  <p class="subtitle">Matches the Email Signature template — copy and paste directly into Outlook.</p>
+  <button type="button" class="btn-change-company" id="btn-change-company" hidden>Change Subsidary</button>
+</div>
 
 <div class="layout">
   <div class="card">
     <div class="card-title">Your Details</div>
 
+    <div class="field" hidden>
+      <label for="f-brand">Company</label>
+      <select id="f-brand">
+        <option value="sisco">SISCO</option>
+        <option value="catering">SISCO Catering</option>
+        <option value="machinery">SISCO Machinery</option>
+      </select>
+    </div>
     <div class="field">
       <label for="f-name">Name</label>
       <input type="text" id="f-name" placeholder="e.g. Your full name" autocomplete="name" />
@@ -249,6 +481,7 @@
     </div>
   </div>
 </div>
+</div>
 
 <div id="asset-preload" aria-hidden="true">
   <img id="preload-logo" src="" alt="" />
@@ -256,40 +489,146 @@
 </div>
 <div id="copy-source" aria-hidden="true"></div>
 
-<script src="signature-assets/images.js"></script>
+<script src="Email-Signature-main/signature-assets/images.js"></script>
 <script>
 (function () {
   'use strict';
 
   const BLUE   = '#006898';
   const ORANGE = '#e38d2d';
+  const TEXT   = '#747474';
   const FONT   = 'Calibri,Arial,Helvetica,sans-serif';
-  const NAME_SIZE   = '13pt';
-  const TITLE_SIZE  = '13pt';
+  const NAME_SIZE   = '11pt';
+  const TITLE_SIZE  = '11pt';
   const BODY_SIZE   = '9pt';
-  const LOGO_W = 109;
-  const LOGO_H = 67;
   const CERT_W = 85;
   const CERT_H = 20;
-  const LOGO_SOURCES = [
-    window.SIG_ASSETS && window.SIG_ASSETS.logo,
-    'signature-assets/sisco-logo.png',
-    'https://i.imghippo.com/files/JZ3827XsQ.png',
-  ].filter(Boolean);
-  const CERTS_FILE = (window.SIG_ASSETS && window.SIG_ASSETS.certs) || 'signature-assets/certs.png';
-  let logoSourceIndex = 0;
-  let logoFile = LOGO_SOURCES[0] || '';
-  const PHONE_CC   = '+966';
+  const CERTS_FILE = (window.SIG_ASSETS && window.SIG_ASSETS.certs)
+    || 'Email-Signature-main/signature-assets/certs.png';
+  const PHONE_CC = '+966';
 
+  const BRANDS = {
+    sisco: {
+      label: 'SISCO',
+      logoW: 120,
+      logoH: 62,
+      logoSources: [
+        'https://i.imghippo.com/files/zMzq1153mjc.png',
+      ],
+    },
+    catering: {
+      label: 'SISCO Catering',
+      logoW: 155,
+      logoH: 52,
+      logoSources: [
+        'https://i.imghippo.com/files/OXuM1910TEc.png',
+      ],
+    },
+    machinery: {
+      label: 'SISCO Machinery',
+      logoW: 155,
+      logoH: 50,
+      logoSources: [
+        'https://i.imghippo.com/files/faU6181ML.jpg',
+      ],
+    },
+  };
+
+  let activeBrandKey = 'sisco';
+  let brandChosen = false;
+  let pendingBrandKey = null;
+  let logoSourceIndex = 0;
+  let logoFile = '';
   let logoDataUrl  = null;
   let certsDataUrl = null;
+  let certsLoaded = false;
 
   const fields = {
+    brand:    document.getElementById('f-brand'),
     name:     document.getElementById('f-name'),
     position: document.getElementById('f-position'),
     tel:      document.getElementById('f-tel'),
     mobile:   document.getElementById('f-mobile'),
   };
+
+  const brandModal = document.getElementById('brand-modal');
+  const btnContinue = document.getElementById('btn-brand-continue');
+  const btnChangeCompany = document.getElementById('btn-change-company');
+  const pageTitle = document.getElementById('page-title');
+  const brandOptionBtns = Array.prototype.slice.call(document.querySelectorAll('.brand-option'));
+
+  function getBrand() {
+    return BRANDS[activeBrandKey] || BRANDS.sisco;
+  }
+
+  function syncPageTitle() {
+    const title = getBrand().label + ' Email Signature Generator';
+    if (pageTitle) pageTitle.textContent = title;
+    document.title = title;
+  }
+
+  function firstLogoSrc(brandKey) {
+    const sources = (BRANDS[brandKey] && BRANDS[brandKey].logoSources) || [];
+    return sources[0] || '';
+  }
+
+  function resolveBrandKey(key) {
+    return BRANDS[key] ? key : 'sisco';
+  }
+
+  function initModalLogos() {
+    const siscoImg = document.getElementById('modal-logo-sisco');
+    const cateringImg = document.getElementById('modal-logo-catering');
+    const machineryImg = document.getElementById('modal-logo-machinery');
+    if (siscoImg) siscoImg.src = firstLogoSrc('sisco');
+    if (cateringImg) cateringImg.src = firstLogoSrc('catering');
+    if (machineryImg) machineryImg.src = firstLogoSrc('machinery');
+  }
+
+  function setPendingBrand(key) {
+    pendingBrandKey = resolveBrandKey(key);
+    brandOptionBtns.forEach(function (btn) {
+      const selected = btn.getAttribute('data-brand') === pendingBrandKey;
+      btn.classList.toggle('is-selected', selected);
+      btn.setAttribute('aria-checked', selected ? 'true' : 'false');
+    });
+    btnContinue.disabled = !pendingBrandKey;
+  }
+
+  function openBrandModal(reopen) {
+    if (reopen && brandChosen) {
+      setPendingBrand(activeBrandKey);
+    } else {
+      pendingBrandKey = null;
+      brandOptionBtns.forEach(function (btn) {
+        btn.classList.remove('is-selected');
+        btn.setAttribute('aria-checked', 'false');
+      });
+      btnContinue.disabled = true;
+    }
+    brandModal.classList.remove('is-hidden');
+    brandModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('app-locked');
+    const firstOpt = brandOptionBtns[0];
+    if (firstOpt) firstOpt.focus();
+  }
+
+  function closeBrandModal() {
+    brandModal.classList.add('is-hidden');
+    brandModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('app-locked');
+  }
+
+  function applyBrand(key) {
+    activeBrandKey = resolveBrandKey(key);
+    brandChosen = true;
+    fields.brand.value = activeBrandKey;
+    btnChangeCompany.hidden = false;
+    syncPageTitle();
+    closeBrandModal();
+    loadLogoForBrand();
+    if (!certsLoaded) preloadCerts();
+  }
 
   function esc(s) {
     return String(s)
@@ -351,9 +690,10 @@
   }
 
   function imgToDataUrl(img) {
+    const brand = getBrand();
     const c = document.createElement('canvas');
-    c.width  = img.naturalWidth  || LOGO_W;
-    c.height = img.naturalHeight || LOGO_H;
+    c.width  = img.naturalWidth  || brand.logoW;
+    c.height = img.naturalHeight || brand.logoH;
     c.getContext('2d').drawImage(img, 0, 0);
     return c.toDataURL('image/png');
   }
@@ -367,34 +707,37 @@
   }
 
   function buildSignatureHtml(v, forCopy) {
+    const brand      = getBrand();
+    const logoW      = brand.logoW;
+    const logoH      = brand.logoH;
     const telLine    = esc(v.tel)    || '&nbsp;';
     const mobileLine = esc(v.mobile) || '&nbsp;';
 
-    const textBase = 'font-family:' + FONT + ';font-weight:normal;font-style:normal;color:' + BLUE + ';';
+    const textBase = 'font-family:' + FONT + ';font-weight:normal;font-style:normal;color:' + TEXT + ';';
 
     return [
       '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;' + textBase + '">',
-      '  <tr><td style="' + textBase + 'font-size:' + NAME_SIZE + ';font-weight:bold;line-height:20pt;mso-line-height-rule:exactly;padding:0 0 2px 0;">' + esc(v.name) + '</td></tr>',
+      '  <tr><td style="' + textBase + 'font-weight:bold;font-size:' + NAME_SIZE + ';line-height:20pt;mso-line-height-rule:exactly;padding:0 0 2px 0;">' + esc(v.name) + '</td></tr>',
       '  <tr><td style="' + textBase + 'font-size:' + TITLE_SIZE + ';line-height:20pt;mso-line-height-rule:exactly;padding:0 0 8px 0;">' + esc(v.position) + '</td></tr>',
       '  <tr><td style="padding:0 0 10px 0;">',
       '    <table cellpadding="0" cellspacing="0" border="0" width="450" style="border-collapse:collapse;">',
-      '      <tr><td style="border-bottom:1px solid ' + BLUE + ';font-size:0;line-height:0;">&nbsp;</td></tr>',
+      '      <tr><td style="border-bottom:1px solid ' + TEXT + ';font-size:0;line-height:0;">&nbsp;</td></tr>',
       '    </table>',
       '  </td></tr>',
       '  <tr><td>',
       '    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">',
       '      <tr>',
       '        <td valign="middle" style="padding:0 14px 0 0;">',
-      '          <img src="' + logoSrc(forCopy) + '" width="' + LOGO_W + '" height="' + LOGO_H + '" alt="SISCO" style="display:block;border:0;width:' + LOGO_W + 'px;height:' + LOGO_H + 'px;" />',
+      '          <img src="' + logoSrc(forCopy) + '" width="' + logoW + '" height="' + logoH + '" alt="' + esc(brand.label) + '" style="display:block;border:0;width:' + logoW + 'px;height:' + logoH + 'px;" />',
       '        </td>',
       '        <td valign="top" style="border-left:2px solid ' + ORANGE + ';padding:2px 18px 0 14px;">',
       '          <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;' + textBase + 'font-size:' + BODY_SIZE + ';line-height:' + BODY_SIZE + ';mso-line-height-rule:exactly;">',
       '            <tr><td style="padding:0;margin:0;line-height:' + BODY_SIZE + ';mso-line-height-rule:exactly;">Telephone:&nbsp;' + telLine + '</td></tr>',
       '            <tr><td style="padding:0;margin:0;line-height:' + BODY_SIZE + ';mso-line-height-rule:exactly;">Mobile:&nbsp;' + mobileLine + '</td></tr>',
-      '            <tr><td style="padding:0 0 4px 0;"><a href="https://www.siscosaudi.com" style="font-family:' + FONT + ';font-size:' + BODY_SIZE + ';color:' + BLUE + ';text-decoration:underline;">www.siscosaudi.com</a></td></tr>',
+      '            <tr><td style="padding:0 0 4px 0;"><a href="https://www.siscosaudi.com" style="font-family:' + FONT + ';font-size:' + BODY_SIZE + ';color:' + TEXT + ';text-decoration:underline;">www.siscosaudi.com</a></td></tr>',
       '            <tr><td style="padding:0;">King Faisal, Ibn Abdul Al-Aziz,<br />Al-Bahar, Al Khobar 34218, Saudi Arabia</td></tr>',
       '          </table>',
-        '        </td>',
+      '        </td>',
       '        <td valign="bottom" style="padding:0 0 4px 6px;">',
       '          <img src="' + certsSrc(forCopy) + '" width="' + CERT_W + '" height="' + CERT_H + '" alt="Certifications" style="display:block;border:0;width:' + CERT_W + 'px;height:' + CERT_H + 'px;" />',
       '        </td>',
@@ -476,14 +819,21 @@
   }
 
   function clearForm() {
-    Object.values(fields).forEach(function (el) { el.value = ''; });
+    fields.name.value = '';
+    fields.position.value = '';
+    fields.tel.value = '';
+    fields.mobile.value = '';
     update();
     toast('Form cleared.', 'ok');
   }
 
   function syncHeaderLogo() {
     const headerLogo = document.getElementById('header-logo');
-    if (headerLogo && logoFile) headerLogo.src = logoFile;
+    const brand = getBrand();
+    if (headerLogo && logoFile) {
+      headerLogo.src = logoFile;
+      headerLogo.alt = brand.label;
+    }
   }
 
   function toast(msg, type) {
@@ -494,9 +844,14 @@
     el._timer = setTimeout(function () { el.className = 'toast'; }, 4000);
   }
 
-  function preloadAssets() {
-    const logoEl  = document.getElementById('preload-logo');
-    const certsEl = document.getElementById('preload-certs');
+  function loadLogoForBrand() {
+    const brand = getBrand();
+    const logoEl = document.getElementById('preload-logo');
+    const sources = brand.logoSources;
+
+    logoSourceIndex = 0;
+    logoDataUrl = null;
+    logoFile = '';
 
     function onLogoReady() {
       if (logoFile.indexOf('data:') === 0) {
@@ -508,21 +863,12 @@
       update();
     }
 
-    function onCertsReady() {
-      if (CERTS_FILE.indexOf('data:') === 0) {
-        certsDataUrl = CERTS_FILE;
-      } else {
-        try { certsDataUrl = imgToDataUrl(certsEl); } catch (_) {}
-      }
-      update();
-    }
-
     function loadLogoSource() {
-      if (logoSourceIndex >= LOGO_SOURCES.length) {
+      if (logoSourceIndex >= sources.length) {
         update();
         return;
       }
-      logoFile = LOGO_SOURCES[logoSourceIndex++];
+      logoFile = sources[logoSourceIndex++];
       if (logoFile.indexOf('data:') === 0) {
         logoDataUrl = logoFile;
         syncHeaderLogo();
@@ -533,33 +879,80 @@
       if (logoEl.complete && logoEl.naturalWidth) onLogoReady();
     }
 
-    logoEl.addEventListener('load', onLogoReady);
-    logoEl.addEventListener('error', loadLogoSource);
+    logoEl.onload = onLogoReady;
+    logoEl.onerror = loadLogoSource;
+    loadLogoSource();
+  }
+
+  function preloadCerts() {
+    const certsEl = document.getElementById('preload-certs');
+
+    function onCertsReady() {
+      certsLoaded = true;
+      if (CERTS_FILE.indexOf('data:') === 0) {
+        certsDataUrl = CERTS_FILE;
+      } else {
+        try { certsDataUrl = imgToDataUrl(certsEl); } catch (_) {}
+      }
+      if (brandChosen) update();
+    }
 
     if (CERTS_FILE.indexOf('data:') === 0) {
       certsDataUrl = CERTS_FILE;
+      certsLoaded = true;
     } else {
       certsEl.src = CERTS_FILE;
       if (certsEl.complete && certsEl.naturalWidth) onCertsReady();
       else certsEl.addEventListener('load', onCertsReady);
-      certsEl.addEventListener('error', update);
+      certsEl.addEventListener('error', function () {
+        certsLoaded = true;
+        if (brandChosen) update();
+      });
     }
+  }
 
-    loadLogoSource();
+  function switchBrand() {
+    activeBrandKey = resolveBrandKey(fields.brand.value);
+    syncPageTitle();
+    loadLogoForBrand();
   }
 
   bindTitleCase(fields.name);
   bindTitleCase(fields.position);
   bindDigitsOnly(fields.tel);
   bindDigitsOnly(fields.mobile);
-  Object.values(fields).forEach(function (el) {
+  [fields.name, fields.position, fields.tel, fields.mobile].forEach(function (el) {
     el.addEventListener('input', update);
   });
+  fields.brand.addEventListener('change', switchBrand);
   document.getElementById('btn-copy').addEventListener('click', copySignature);
   document.getElementById('btn-clear').addEventListener('click', clearForm);
 
-  update();
-  preloadAssets();
+  brandOptionBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setPendingBrand(btn.getAttribute('data-brand'));
+    });
+    btn.addEventListener('dblclick', function () {
+      setPendingBrand(btn.getAttribute('data-brand'));
+      applyBrand(pendingBrandKey);
+    });
+  });
+  btnContinue.addEventListener('click', function () {
+    if (!pendingBrandKey) return;
+    applyBrand(pendingBrandKey);
+  });
+  btnChangeCompany.addEventListener('click', function () {
+    openBrandModal(true);
+  });
+  brandModal.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && pendingBrandKey && !btnContinue.disabled) {
+      e.preventDefault();
+      applyBrand(pendingBrandKey);
+    }
+  });
+
+  initModalLogos();
+  openBrandModal(false);
 })();
 </script>
 </body>
