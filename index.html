@@ -470,6 +470,7 @@
     </div>
     <p class="hint">
       In Outlook: <strong>File → Options → Mail → Signatures</strong> → New → <strong>Ctrl+V</strong>.
+      Images are embedded (not linked), so they show in classic Outlook without “Download Pictures.”
     </p>
     <div id="toast" class="toast"></div>
   </div>
@@ -503,8 +504,12 @@
   const BODY_SIZE   = '9pt';
   const CERT_W = 85;
   const CERT_H = 20;
-  const CERTS_FILE = (window.SIG_ASSETS && window.SIG_ASSETS.certs)
-    || 'Email-Signature-main/signature-assets/certs.png';
+  const ASSET_BASE = 'Email-Signature-main/signature-assets/';
+  const CERTS_SOURCES = [
+    (window.SIG_ASSETS && window.SIG_ASSETS.certs) || null,
+    ASSET_BASE + 'certs-embed.png',
+    ASSET_BASE + 'certs.png',
+  ].filter(Boolean);
   const PHONE_CC = '+966';
 
   const BRANDS = {
@@ -513,6 +518,7 @@
       logoW: 120,
       logoH: 62,
       logoSources: [
+        ASSET_BASE + 'sisco-logo-embed.png',
         'https://i.imghippo.com/files/zMzq1153mjc.png',
       ],
     },
@@ -521,6 +527,7 @@
       logoW: 155,
       logoH: 52,
       logoSources: [
+        ASSET_BASE + 'sisco-catering-logo-embed.png',
         'https://i.imghippo.com/files/OXuM1910TEc.png',
       ],
     },
@@ -529,6 +536,7 @@
       logoW: 155,
       logoH: 50,
       logoSources: [
+        ASSET_BASE + 'sisco-machinery-logo-embed.png',
         'https://i.imghippo.com/files/faU6181ML.jpg',
       ],
     },
@@ -537,11 +545,13 @@
   let activeBrandKey = 'sisco';
   let brandChosen = false;
   let pendingBrandKey = null;
-  let logoSourceIndex = 0;
   let logoFile = '';
   let logoDataUrl  = null;
   let certsDataUrl = null;
   let certsLoaded = false;
+  let logoReady = false;
+  const logoCache = {};
+  let embedPromise = null;
 
   const fields = {
     brand:    document.getElementById('f-brand'),
@@ -689,21 +699,85 @@
     };
   }
 
-  function imgToDataUrl(img) {
-    const brand = getBrand();
+  function imgToDataUrl(img, targetW, targetH) {
+    const srcW = img.naturalWidth || img.width || targetW;
+    const srcH = img.naturalHeight || img.height || targetH;
+    const outW = Math.max(1, Math.round(targetW * 2));
+    const outH = Math.max(1, Math.round(targetH * 2));
     const c = document.createElement('canvas');
-    c.width  = img.naturalWidth  || brand.logoW;
-    c.height = img.naturalHeight || brand.logoH;
-    c.getContext('2d').drawImage(img, 0, 0);
+    c.width = outW;
+    c.height = outH;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, outW, outH);
+    ctx.drawImage(img, 0, 0, srcW, srcH, 0, 0, outW, outH);
     return c.toDataURL('image/png');
   }
 
+  function loadImageElement(src, useCors) {
+    return new Promise(function (resolve, reject) {
+      const img = new Image();
+      if (useCors && src.indexOf('data:') !== 0) {
+        img.crossOrigin = 'anonymous';
+      }
+      img.onload = function () {
+        if (img.naturalWidth) resolve(img);
+        else reject(new Error('empty image'));
+      };
+      img.onerror = function () { reject(new Error('load failed')); };
+      img.src = src;
+    });
+  }
+
+  async function fetchAsDataUrl(src, targetW, targetH) {
+    if (src.indexOf('data:') === 0) return src;
+
+    // Same-origin / local path: draw resized (best for Outlook size)
+    try {
+      const img = await loadImageElement(src, false);
+      return imgToDataUrl(img, targetW, targetH);
+    } catch (_) { /* try CORS / fetch */ }
+
+    // Remote: fetch as blob to avoid tainted canvas
+    try {
+      const res = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+      if (!res.ok) throw new Error('fetch ' + res.status);
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      try {
+        const img = await loadImageElement(objectUrl, false);
+        return imgToDataUrl(img, targetW, targetH);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch (_) { /* try anonymous CORS draw */ }
+
+    try {
+      const img = await loadImageElement(src, true);
+      return imgToDataUrl(img, targetW, targetH);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function embedFromSources(sources, targetW, targetH) {
+    for (let i = 0; i < sources.length; i++) {
+      const src = sources[i];
+      const dataUrl = await fetchAsDataUrl(src, targetW, targetH);
+      if (dataUrl) return { previewSrc: src, dataUrl: dataUrl };
+    }
+    return { previewSrc: sources[0] || '', dataUrl: null };
+  }
+
   function logoSrc(forCopy) {
-    return (forCopy && logoDataUrl) ? logoDataUrl : logoFile;
+    if (forCopy) return logoDataUrl || logoFile;
+    return logoDataUrl || logoFile;
   }
 
   function certsSrc(forCopy) {
-    return (forCopy && certsDataUrl) ? certsDataUrl : CERTS_FILE;
+    if (forCopy) return certsDataUrl || CERTS_SOURCES[0] || '';
+    return certsDataUrl || CERTS_SOURCES[0] || '';
   }
 
   function buildSignatureHtml(v, forCopy) {
@@ -716,6 +790,8 @@
     const ink        = isSisco ? BLUE : TEXT;
     const ruleColor  = isSisco ? BLUE : TEXT;
     const divider    = activeBrandKey === 'machinery' ? '#094b74' : ORANGE;
+    const logo       = logoSrc(forCopy);
+    const certs      = certsSrc(forCopy);
 
     const textBase = 'font-family:' + FONT + ';font-weight:normal;font-style:normal;color:' + ink + ';';
 
@@ -732,7 +808,7 @@
       '    <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">',
       '      <tr>',
       '        <td valign="middle" style="padding:0 14px 0 0;">',
-      '          <img src="' + logoSrc(forCopy) + '" width="' + logoW + '" height="' + logoH + '" alt="' + esc(brand.label) + '" style="display:block;border:0;width:' + logoW + 'px;height:' + logoH + 'px;" />',
+      '          <img src="' + logo + '" width="' + logoW + '" height="' + logoH + '" alt="' + esc(brand.label) + '" style="display:block;border:0;outline:none;text-decoration:none;width:' + logoW + 'px;height:' + logoH + 'px;" />',
       '        </td>',
       '        <td valign="top" style="border-left:2px solid ' + divider + ';padding:2px 18px 0 14px;">',
       '          <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;' + textBase + 'font-size:' + BODY_SIZE + ';line-height:' + BODY_SIZE + ';mso-line-height-rule:exactly;">',
@@ -743,7 +819,7 @@
       '          </table>',
       '        </td>',
       '        <td valign="bottom" style="padding:0 0 4px 6px;">',
-      '          <img src="' + certsSrc(forCopy) + '" width="' + CERT_W + '" height="' + CERT_H + '" alt="Certifications" style="display:block;border:0;width:' + CERT_W + 'px;height:' + CERT_H + 'px;" />',
+      '          <img src="' + certs + '" width="' + CERT_W + '" height="' + CERT_H + '" alt="Certifications" style="display:block;border:0;outline:none;text-decoration:none;width:' + CERT_W + 'px;height:' + CERT_H + 'px;" />',
       '        </td>',
       '      </tr>',
       '    </table>',
@@ -778,48 +854,101 @@
     return header + htmlBody;
   }
 
+  async function ensureEmbedsReady() {
+    if (logoDataUrl && logoDataUrl.indexOf('data:') === 0 &&
+        certsDataUrl && certsDataUrl.indexOf('data:') === 0) {
+      return true;
+    }
+    if (embedPromise) return embedPromise;
+
+    embedPromise = (async function () {
+      const brand = getBrand();
+      if (!(logoDataUrl && logoDataUrl.indexOf('data:') === 0)) {
+        const packed = await embedFromSources(brand.logoSources, brand.logoW, brand.logoH);
+        if (packed.previewSrc) logoFile = packed.previewSrc;
+        if (packed.dataUrl) {
+          logoDataUrl = packed.dataUrl;
+          logoCache[activeBrandKey] = packed.dataUrl;
+          logoReady = true;
+        }
+      }
+      if (!(certsDataUrl && certsDataUrl.indexOf('data:') === 0)) {
+        const packedCerts = await embedFromSources(CERTS_SOURCES, CERT_W, CERT_H);
+        if (packedCerts.dataUrl) {
+          certsDataUrl = packedCerts.dataUrl;
+          certsLoaded = true;
+        }
+      }
+      syncHeaderLogo();
+      update();
+      return !!(logoDataUrl && logoDataUrl.indexOf('data:') === 0);
+    })();
+
+    try {
+      return await embedPromise;
+    } finally {
+      embedPromise = null;
+    }
+  }
+
   async function copySignature() {
-    const v = getValues();
-    const html = buildSignatureHtml(v, true);
-    const plain = [
-      v.name, v.position, '',
-      'Telephone: ' + (v.tel || ''),
-      'Mobile:  ' + (v.mobile || ''),
-      'www.siscosaudi.com',
-      'King Faisal, Ibn Abdul Al-Aziz, Al-Bahar, Al Khobar 34218, Saudi Arabia'
-    ].join('\r\n');
+    const btn = document.getElementById('btn-copy');
+    const prevLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing images…';
 
     try {
-      const src = document.getElementById('copy-source');
-      src.innerHTML = html;
-      const range = document.createRange();
-      range.selectNodeContents(src);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-      if (document.execCommand('copy')) {
+      const ok = await ensureEmbedsReady();
+      if (!ok || !(logoDataUrl && logoDataUrl.indexOf('data:') === 0)) {
+        toast('Logo not ready for Outlook embed. Open via a local server or wait and try again.', 'err');
+        return;
+      }
+
+      const v = getValues();
+      const html = buildSignatureHtml(v, true);
+      const plain = [
+        v.name, v.position, '',
+        'Telephone: ' + (v.tel || ''),
+        'Mobile:  ' + (v.mobile || ''),
+        'www.siscosaudi.com',
+        'King Faisal, Ibn Abdul Al-Aziz, Al-Bahar, Al Khobar 34218, Saudi Arabia'
+      ].join('\r\n');
+
+      try {
+        const src = document.getElementById('copy-source');
+        src.innerHTML = html;
+        const range = document.createRange();
+        range.selectNodeContents(src);
+        const sel = window.getSelection();
         sel.removeAllRanges();
-        toast('Copied! Paste into Outlook Signatures with Ctrl+V.', 'ok');
-        return;
-      }
-      sel.removeAllRanges();
-    } catch (_) { /* fall through */ }
+        sel.addRange(range);
+        if (document.execCommand('copy')) {
+          sel.removeAllRanges();
+          toast('Copied with embedded images — paste into Outlook Signatures (Ctrl+V).', 'ok');
+          return;
+        }
+        sel.removeAllRanges();
+      } catch (_) { /* fall through */ }
 
-    try {
-      if (navigator.clipboard && window.ClipboardItem) {
-        const cfHtml = wrapCfHtml(html);
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html':  new Blob([cfHtml], { type: 'text/html' }),
-            'text/plain': new Blob([plain],  { type: 'text/plain' }),
-          }),
-        ]);
-        toast('Copied! Paste into Outlook Signatures with Ctrl+V.', 'ok');
-        return;
-      }
-    } catch (_) { /* fall through */ }
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const cfHtml = wrapCfHtml(html);
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              'text/html':  new Blob([cfHtml], { type: 'text/html' }),
+              'text/plain': new Blob([plain],  { type: 'text/plain' }),
+            }),
+          ]);
+          toast('Copied with embedded images — paste into Outlook Signatures (Ctrl+V).', 'ok');
+          return;
+        }
+      } catch (_) { /* fall through */ }
 
-    toast('Copy failed. Click inside the preview, press Ctrl+A then Ctrl+C.', 'err');
+      toast('Copy failed. Click inside the preview, press Ctrl+A then Ctrl+C.', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prevLabel;
+    }
   }
 
   function clearForm() {
@@ -834,8 +963,9 @@
   function syncHeaderLogo() {
     const headerLogo = document.getElementById('header-logo');
     const brand = getBrand();
-    if (headerLogo && logoFile) {
-      headerLogo.src = logoFile;
+    const src = logoDataUrl || logoFile;
+    if (headerLogo && src) {
+      headerLogo.src = src;
       headerLogo.alt = brand.label;
     }
   }
@@ -845,74 +975,50 @@
     el.textContent = msg;
     el.className = 'toast ' + type;
     clearTimeout(el._timer);
-    el._timer = setTimeout(function () { el.className = 'toast'; }, 4000);
+    el._timer = setTimeout(function () { el.className = 'toast'; }, 4500);
   }
 
-  function loadLogoForBrand() {
+  async function loadLogoForBrand() {
     const brand = getBrand();
-    const logoEl = document.getElementById('preload-logo');
-    const sources = brand.logoSources;
+    const key = activeBrandKey;
+    logoReady = false;
+    logoFile = brand.logoSources[0] || '';
+    logoDataUrl = logoCache[key] || null;
 
-    logoSourceIndex = 0;
-    logoDataUrl = null;
-    logoFile = '';
-
-    function onLogoReady() {
-      if (logoFile.indexOf('data:') === 0) {
-        logoDataUrl = logoFile;
-      } else {
-        try { logoDataUrl = imgToDataUrl(logoEl); } catch (_) {}
-      }
+    if (logoDataUrl) {
+      logoReady = true;
+      logoFile = logoDataUrl;
       syncHeaderLogo();
       update();
+      return;
     }
 
-    function loadLogoSource() {
-      if (logoSourceIndex >= sources.length) {
-        update();
-        return;
-      }
-      logoFile = sources[logoSourceIndex++];
-      if (logoFile.indexOf('data:') === 0) {
-        logoDataUrl = logoFile;
-        syncHeaderLogo();
-        update();
-        return;
-      }
-      logoEl.src = logoFile;
-      if (logoEl.complete && logoEl.naturalWidth) onLogoReady();
-    }
+    syncHeaderLogo();
+    update();
 
-    logoEl.onload = onLogoReady;
-    logoEl.onerror = loadLogoSource;
-    loadLogoSource();
+    const packed = await embedFromSources(brand.logoSources, brand.logoW, brand.logoH);
+    if (key !== activeBrandKey) return;
+    if (packed.previewSrc) logoFile = packed.previewSrc;
+    if (packed.dataUrl) {
+      logoDataUrl = packed.dataUrl;
+      logoCache[key] = packed.dataUrl;
+      logoReady = true;
+    }
+    syncHeaderLogo();
+    update();
   }
 
-  function preloadCerts() {
-    const certsEl = document.getElementById('preload-certs');
-
-    function onCertsReady() {
+  async function preloadCerts() {
+    if (certsDataUrl && certsDataUrl.indexOf('data:') === 0) {
       certsLoaded = true;
-      if (CERTS_FILE.indexOf('data:') === 0) {
-        certsDataUrl = CERTS_FILE;
-      } else {
-        try { certsDataUrl = imgToDataUrl(certsEl); } catch (_) {}
-      }
-      if (brandChosen) update();
+      return;
     }
-
-    if (CERTS_FILE.indexOf('data:') === 0) {
-      certsDataUrl = CERTS_FILE;
+    const packed = await embedFromSources(CERTS_SOURCES, CERT_W, CERT_H);
+    if (packed.dataUrl) {
+      certsDataUrl = packed.dataUrl;
       certsLoaded = true;
-    } else {
-      certsEl.src = CERTS_FILE;
-      if (certsEl.complete && certsEl.naturalWidth) onCertsReady();
-      else certsEl.addEventListener('load', onCertsReady);
-      certsEl.addEventListener('error', function () {
-        certsLoaded = true;
-        if (brandChosen) update();
-      });
     }
+    if (brandChosen) update();
   }
 
   function switchBrand() {
@@ -957,6 +1063,8 @@
 
   initModalLogos();
   openBrandModal(false);
+  // Warm local embeds early (works best when opened via http://localhost, not always via file://)
+  preloadCerts();
 })();
 </script>
 </body>
