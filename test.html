@@ -490,7 +490,7 @@
 </div>
 <div id="copy-source" aria-hidden="true"></div>
 
-<script src="Email-Signature-main/signature-assets/images.js"></script>
+<script src="signature-assets/images.js"></script>
 <script>
 (function () {
   'use strict';
@@ -504,22 +504,21 @@
   const BODY_SIZE   = '9pt';
   const CERT_W = 85;
   const CERT_H = 20;
-  const ASSET_BASE = 'Email-Signature-main/signature-assets/';
+  const ASSET_BASE = 'signature-assets/';
   const CERTS_SOURCES = [
-    (window.SIG_ASSETS && window.SIG_ASSETS.certs) || null,
     ASSET_BASE + 'certs-embed.png',
     ASSET_BASE + 'certs.png',
-  ].filter(Boolean);
+  ];
   const PHONE_CC = '+966';
 
   const BRANDS = {
     sisco: {
       label: 'SISCO',
       logoW: 120,
-      logoH: 62,
+      logoH: 56,
       logoSources: [
         ASSET_BASE + 'sisco-logo-embed.png',
-        'https://i.imghippo.com/files/zMzq1153mjc.png',
+        ASSET_BASE + 'image1.png',
       ],
     },
     catering: {
@@ -528,7 +527,7 @@
       logoH: 52,
       logoSources: [
         ASSET_BASE + 'sisco-catering-logo-embed.png',
-        'https://i.imghippo.com/files/OXuM1910TEc.png',
+        ASSET_BASE + 'catering-logo.png',
       ],
     },
     machinery: {
@@ -537,7 +536,7 @@
       logoH: 50,
       logoSources: [
         ASSET_BASE + 'sisco-machinery-logo-embed.png',
-        'https://i.imghippo.com/files/faU6181ML.jpg',
+        ASSET_BASE + 'machinery-logo.jpg',
       ],
     },
   };
