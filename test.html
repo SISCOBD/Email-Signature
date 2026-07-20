@@ -450,13 +450,6 @@
       <input type="text" id="f-position" placeholder="e.g. Senior Engineer" />
     </div>
     <div class="field">
-      <label for="f-tel">Telephone</label>
-      <div class="phone-field">
-        <span class="phone-prefix">+966</span>
-        <input type="text" id="f-tel" placeholder="013 829 7800" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
-      </div>
-    </div>
-    <div class="field">
       <label for="f-ext">Extension</label>
       <input type="text" id="f-ext" placeholder="8008" inputmode="numeric" pattern="[0-9]*" />
     </div>
@@ -514,6 +507,7 @@
     ASSET_BASE + 'certs.png',
   ];
   const PHONE_CC = '+966';
+  const FIXED_TEL = '+966 0138297800';
 
   const BRANDS = {
     sisco: {
@@ -560,7 +554,6 @@
     brand:    document.getElementById('f-brand'),
     name:     document.getElementById('f-name'),
     position: document.getElementById('f-position'),
-    tel:      document.getElementById('f-tel'),
     ext:      document.getElementById('f-ext'),
     mobile:   document.getElementById('f-mobile'),
   };
@@ -696,8 +689,8 @@
     const name     = capitalizeWords(fields.name.value);
     const position = capitalizeWords(fields.position.value);
     const ext      = digitsOnly(fields.ext.value);
-    let tel        = formatPhone(fields.tel.value);
-    if (ext) tel += ' - ' + ext;
+    let tel        = FIXED_TEL;
+    if (ext) tel += ' - EXT ' + ext;
     return {
       name:     name     || 'Your Name',
       position: position || 'Your Position',
@@ -961,7 +954,6 @@
   function clearForm() {
     fields.name.value = '';
     fields.position.value = '';
-    fields.tel.value = '';
     fields.ext.value = '';
     fields.mobile.value = '';
     update();
@@ -1037,10 +1029,9 @@
 
   bindTitleCase(fields.name);
   bindTitleCase(fields.position);
-  bindDigitsOnly(fields.tel);
   bindDigitsOnly(fields.ext);
   bindDigitsOnly(fields.mobile);
-  [fields.name, fields.position, fields.tel, fields.ext, fields.mobile].forEach(function (el) {
+  [fields.name, fields.position, fields.ext, fields.mobile].forEach(function (el) {
     el.addEventListener('input', update);
   });
   fields.brand.addEventListener('change', switchBrand);
