@@ -453,8 +453,12 @@
       <label for="f-tel">Telephone</label>
       <div class="phone-field">
         <span class="phone-prefix">+966</span>
-        <input type="text" id="f-tel" placeholder="131234567" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
+        <input type="text" id="f-tel" placeholder="013 829 7800" inputmode="numeric" pattern="[0-9]*" autocomplete="tel" />
       </div>
+    </div>
+    <div class="field">
+      <label for="f-ext">Extension</label>
+      <input type="text" id="f-ext" placeholder="8008" inputmode="numeric" pattern="[0-9]*" />
     </div>
     <div class="field">
       <label for="f-mobile">Mobile</label>
@@ -557,6 +561,7 @@
     name:     document.getElementById('f-name'),
     position: document.getElementById('f-position'),
     tel:      document.getElementById('f-tel'),
+    ext:      document.getElementById('f-ext'),
     mobile:   document.getElementById('f-mobile'),
   };
 
@@ -690,10 +695,13 @@
   function getValues() {
     const name     = capitalizeWords(fields.name.value);
     const position = capitalizeWords(fields.position.value);
+    const ext      = digitsOnly(fields.ext.value);
+    let tel        = formatPhone(fields.tel.value);
+    if (ext) tel += ' - ' + ext;
     return {
       name:     name     || 'Your Name',
       position: position || 'Your Position',
-      tel:      formatPhone(fields.tel.value),
+      tel:      tel,
       mobile:   formatPhone(fields.mobile.value),
     };
   }
@@ -954,6 +962,7 @@
     fields.name.value = '';
     fields.position.value = '';
     fields.tel.value = '';
+    fields.ext.value = '';
     fields.mobile.value = '';
     update();
     toast('Form cleared.', 'ok');
@@ -1029,8 +1038,9 @@
   bindTitleCase(fields.name);
   bindTitleCase(fields.position);
   bindDigitsOnly(fields.tel);
+  bindDigitsOnly(fields.ext);
   bindDigitsOnly(fields.mobile);
-  [fields.name, fields.position, fields.tel, fields.mobile].forEach(function (el) {
+  [fields.name, fields.position, fields.tel, fields.ext, fields.mobile].forEach(function (el) {
     el.addEventListener('input', update);
   });
   fields.brand.addEventListener('change', switchBrand);
